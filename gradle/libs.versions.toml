@@ -14,6 +14,10 @@ spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-star
 spring-security-test = { module = "org.springframework.security:spring-security-test" }
 spring-web = { module = "org.springframework:spring-web" }
 spring-webmvc = { module = "org.springframework:spring-webmvc" }
+spring-context = { module = "org.springframework:spring-context" }
+jakarta-servlet = { module = "jakarta.servlet:jakarta.servlet-api" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 jakarta-persistence = { module = "jakarta.persistence:jakarta.persistence-api" }
 springdoc = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
 postgresql = { module = "org.postgresql:postgresql" }
