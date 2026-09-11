@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changelog/001-customers.yaml
+  - include:
+      file: db/changelog/changelog/002-accounts-cards.yaml
+  - include:
+      file: db/changelog/changelog/003-embassies.yaml
+  - include:
+      file: db/changelog/changelog/004-orders.yaml
+  - include:
+      file: db/changelog/changelog/005-indexes.yaml
+  - include:
+      file: db/changelog/changelog/006-seed.yaml
