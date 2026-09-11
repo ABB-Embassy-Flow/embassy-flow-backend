@@ -1,1 +1,127 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: 002-001
+      author: nihadmusa
+      changes:
+        - createTable:
+            tableName: accounts
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_number
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: char(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: balance
+                  type: numeric(18,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_type
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 002-002
+      author: nihadmusa
+      changes:
+        - createTable:
+            tableName: cards
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: masked_number
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_brand
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expiry
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 002-003
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: accounts
+            baseColumnNames: customer_id
+            constraintName: fk_accounts_customer
+            referencedTableName: customers
+            referencedColumnNames: id
+  - changeSet:
+      id: 002-004
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: cards
+            baseColumnNames: account_id
+            constraintName: fk_cards_account
+            referencedTableName: accounts
+            referencedColumnNames: id

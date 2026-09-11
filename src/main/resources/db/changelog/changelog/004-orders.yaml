@@ -1,1 +1,268 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: 004-001
+      author: nihadmusa
+      changes:
+        - createTable:
+            tableName: document_orders
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_number
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: document_type
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: embassy_id
+                  type: bigint
+              - column:
+                  name: language
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_fee
+                  type: numeric(18,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: commission
+                  type: numeric(18,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_amount
+                  type: numeric(18,2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: char(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verification_code
+                  type: varchar(20)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 004-002
+      author: nihadmusa
+      changes:
+        - createTable:
+            tableName: order_items
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: account_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: period
+                  type: varchar(5)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: statement_type
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: equivalent_currency
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 004-003
+      author: nihadmusa
+      changes:
+        - createTable:
+            tableName: order_timeline
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: step
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: varchar(500)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 004-004
+      author: nihadmusa
+      changes:
+        - createTable:
+            tableName: payments
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: card_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: numeric(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: char(3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_no
+                  type: varchar(30)
+  - changeSet:
+      id: 004-005
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: document_orders
+            baseColumnNames: customer_id
+            constraintName: fk_orders_customer
+            referencedTableName: customers
+            referencedColumnNames: id
+  - changeSet:
+      id: 004-006
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: document_orders
+            baseColumnNames: embassy_id
+            constraintName: fk_orders_embassy
+            referencedTableName: embassies
+            referencedColumnNames: id
+  - changeSet:
+      id: 004-007
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: order_id
+            constraintName: fk_items_order
+            referencedTableName: document_orders
+            referencedColumnNames: id
+  - changeSet:
+      id: 004-008
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: order_items
+            baseColumnNames: account_id
+            constraintName: fk_items_account
+            referencedTableName: accounts
+            referencedColumnNames: id
+  - changeSet:
+      id: 004-009
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: order_timeline
+            baseColumnNames: order_id
+            constraintName: fk_timeline_order
+            referencedTableName: document_orders
+            referencedColumnNames: id
+  - changeSet:
+      id: 004-010
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: payments
+            baseColumnNames: order_id
+            constraintName: fk_payments_order
+            referencedTableName: document_orders
+            referencedColumnNames: id
+  - changeSet:
+      id: 004-011
+      author: nihadmusa
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: payments
+            baseColumnNames: card_id
+            constraintName: fk_payments_card
+            referencedTableName: cards
+            referencedColumnNames: id
