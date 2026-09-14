@@ -2,24 +2,32 @@ package az.abb.embassyflow.order.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import az.abb.embassyflow.common.exception.BusinessException;
+import az.abb.embassyflow.common.exception.ErrorCodes;
+import az.abb.embassyflow.embassy.service.EmbassyService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.repository.DocumentOrderRepository;
 import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
+import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
+import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
 import az.abb.embassyflow.order.enums.DocumentType;
 import az.abb.embassyflow.order.enums.Language;
 import az.abb.embassyflow.order.enums.OrderStatus;
 import az.abb.embassyflow.order.enums.TimelineStep;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
@@ -29,6 +37,9 @@ class OrderServiceTest {
 
     @Mock
     private OrderNumberGenerator orderNumberGenerator;
+
+    @Mock
+    private EmbassyService embassyService;
 
     @InjectMocks
     private OrderService orderService;
@@ -54,5 +65,65 @@ class OrderServiceTest {
         assertEquals(1, saved.getTimeline().size());
         assertEquals(TimelineStep.ORDER_RECEIVED, saved.getTimeline().get(0).getStep());
         assertNotNull(saved.getTimeline().get(0).getOrder());
+    }
+
+    private DocumentOrder order(DocumentType type, OrderStatus status) {
+        DocumentOrder order = new DocumentOrder();
+        order.setDocumentType(type);
+        order.setLanguage(Language.AZ);
+        order.setStatus(status);
+        order.setOrderNumber("AR-2026-000001");
+        return order;
+    }
+
+    @Test
+    void updateOrder_updatesEmbassyAndLanguage() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.CREATED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+        when(embassyService.exists(1L)).thenReturn(true);
+
+        OrderUpdatedResponse response = orderService.updateOrder(501L, new UpdateOrderRequest(1L, Language.EN));
+
+        assertEquals(1L, response.embassyId());
+        assertEquals(Language.EN, response.language());
+        assertEquals("CREATED", response.status());
+        assertEquals(1L, order.getEmbassyId());
+        assertEquals(Language.EN, order.getLanguage());
+    }
+
+    @Test
+    void updateOrder_orderNotFound_throwsOrderNotFound() {
+        when(orderRepository.findById(501L)).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.updateOrder(501L, new UpdateOrderRequest(1L, Language.EN)));
+
+        assertEquals(ErrorCodes.ORDER_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void updateOrder_certificateWithoutEmbassy_throwsValidationError() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.CREATED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.updateOrder(501L, new UpdateOrderRequest(null, Language.AZ)));
+
+        assertEquals(ErrorCodes.VALIDATION_ERROR, ex.getCode());
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getHttpStatus());
+    }
+
+    @Test
+    void updateOrder_unknownEmbassy_throwsEmbassyNotFound() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.CREATED);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+        when(embassyService.exists(999L)).thenReturn(false);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.updateOrder(501L, new UpdateOrderRequest(999L, Language.AZ)));
+
+        assertEquals(ErrorCodes.EMBASSY_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
     }
 }

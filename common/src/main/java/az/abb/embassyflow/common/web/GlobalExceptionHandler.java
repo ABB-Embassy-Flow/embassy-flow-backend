@@ -13,9 +13,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = System.getLogger("az.abb.embassyflow.common.web.GlobalExceptionHandler");
 
     private final MessageSource messageSource;
 
@@ -39,6 +43,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
+        log.log(Level.ERROR, "Unexpected error on " + request.getMethod() + " " + request.getRequestURI(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCodes.INTERNAL_ERROR, "error.generic", new Object[0], request);
     }
 

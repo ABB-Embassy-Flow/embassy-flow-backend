@@ -24,5 +24,9 @@ subprojects {
         tasks.withType<Test>().configureEach {
             useJUnitPlatform()
         }
+
+        tasks.withType<JavaCompile>().configureEach {
+            options.compilerArgs.add("-parameters")
+        }
     }
 }

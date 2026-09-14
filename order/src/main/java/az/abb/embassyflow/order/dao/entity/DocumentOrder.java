@@ -41,6 +41,9 @@ public class DocumentOrder extends AuditableEntity {
     @Column(name = "order_number", nullable = false, unique = true, length = 50)
     private String orderNumber;
 
+    @Column(name = "embassy_id")
+    private Long embassyId;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderTimeline> timeline = new ArrayList<>();
 
@@ -85,6 +88,14 @@ public class DocumentOrder extends AuditableEntity {
 
     public void setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+    }
+
+    public Long getEmbassyId() {
+        return embassyId;
+    }
+
+    public void setEmbassyId(Long embassyId) {
+        this.embassyId = embassyId;
     }
 
     public List<OrderTimeline> getTimeline() {

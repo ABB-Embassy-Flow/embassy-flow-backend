@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/001-document-orders.yaml
+  - include:
+      file: db/changelog/002-embassies.yaml
