@@ -47,6 +47,9 @@ public class DocumentOrder extends AuditableEntity {
     @Column(name = "customer_id")
     private Long customerId;
 
+    @Column(name = "verification_code", unique = true, length = 20)
+    private String verificationCode;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderTimeline> timeline = new ArrayList<>();
 
@@ -119,6 +122,14 @@ public class DocumentOrder extends AuditableEntity {
 
     public void setCustomerId(Long customerId) {
         this.customerId = customerId;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
     }
 
     public List<OrderTimeline> getTimeline() {

@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/005-accounts-cards.yaml
   - include:
       file: db/changelog/006-order-items.yaml
+  - include:
+      file: db/changelog/007-order-verification.yaml

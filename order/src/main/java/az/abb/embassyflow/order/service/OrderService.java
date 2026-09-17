@@ -136,7 +136,7 @@ public class OrderService {
                 order.getCreatedAt(), order.getDocumentType().getPrice(), toItemResponses(order));
     }
 
-    private DocumentOrder requireOwnedOrder(Long orderId, Long authenticatedCustomerId) {
+    DocumentOrder requireOwnedOrder(Long orderId, Long authenticatedCustomerId) {
         DocumentOrder order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCodes.ORDER_NOT_FOUND, "error.order_not_found", HttpStatus.NOT_FOUND));

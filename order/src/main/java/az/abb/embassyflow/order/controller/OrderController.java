@@ -9,6 +9,8 @@ import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
 import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
+import az.abb.embassyflow.order.dto.response.PreviewResponse;
+import az.abb.embassyflow.order.service.DocumentService;
 import az.abb.embassyflow.order.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,9 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final DocumentService documentService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, DocumentService documentService) {
         this.orderService = orderService;
+        this.documentService = documentService;
     }
 
     @PostMapping
@@ -64,5 +68,12 @@ public class OrderController {
                                          @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
                                                  required = false) Long authenticatedCustomerId) {
         return orderService.getOrder(orderId, authenticatedCustomerId);
+    }
+
+    @PostMapping("/{orderId}/preview")
+    public PreviewResponse preview(@PathVariable Long orderId,
+                                   @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
+                                           required = false) Long authenticatedCustomerId) {
+        return documentService.generatePreview(orderId, authenticatedCustomerId);
     }
 }
