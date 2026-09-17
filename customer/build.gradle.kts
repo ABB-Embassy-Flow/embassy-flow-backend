@@ -9,4 +9,8 @@ dependencies {
 
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.webmvc)
+    implementation(libs.jackson.annotations)
+
+    testImplementation(libs.spring.boot.starter.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

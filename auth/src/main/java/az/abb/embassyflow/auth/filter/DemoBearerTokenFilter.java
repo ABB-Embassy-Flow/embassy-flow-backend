@@ -1,5 +1,6 @@
 package az.abb.embassyflow.auth.filter;
 
+import az.abb.embassyflow.common.web.AuthAttributes;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +12,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 public class DemoBearerTokenFilter extends OncePerRequestFilter {
 
-    public static final String CUSTOMER_ID_ATTRIBUTE = "auth.customerId";
     private static final String PREFIX = "Bearer demo-token-customer-";
 
     @Override
@@ -21,7 +21,7 @@ public class DemoBearerTokenFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith(PREFIX)) {
             try {
                 String tokenValue = header.substring(PREFIX.length()).trim();
-                request.setAttribute(CUSTOMER_ID_ATTRIBUTE, Long.parseLong(tokenValue));
+                request.setAttribute(AuthAttributes.CUSTOMER_ID, Long.parseLong(tokenValue));
             } catch (NumberFormatException ignored) {
                 // invalid demo token -> treated as anonymous
             }
