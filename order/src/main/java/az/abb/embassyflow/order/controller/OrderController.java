@@ -1,10 +1,13 @@
 package az.abb.embassyflow.order.controller;
 
+import az.abb.embassyflow.auth.filter.DemoBearerTokenFilter;
 import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
+import az.abb.embassyflow.order.dto.request.LinkIdentityRequest;
 import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
 import az.abb.embassyflow.order.service.OrderService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,5 +37,14 @@ public class OrderController {
     @PutMapping("/{orderId}")
     public OrderUpdatedResponse update(@PathVariable Long orderId, @Valid @RequestBody UpdateOrderRequest request) {
         return orderService.updateOrder(orderId, request);
+    }
+
+    @PutMapping("/{orderId}/identity")
+    public OrderUpdatedResponse linkIdentity(@PathVariable Long orderId,
+                                             @Valid @RequestBody LinkIdentityRequest request,
+                                             HttpServletRequest httpRequest) {
+        Long authenticatedCustomerId =
+                (Long) httpRequest.getAttribute(DemoBearerTokenFilter.CUSTOMER_ID_ATTRIBUTE);
+        return orderService.linkIdentity(orderId, request.customerId(), authenticatedCustomerId);
     }
 }

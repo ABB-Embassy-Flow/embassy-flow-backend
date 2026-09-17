@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import az.abb.embassyflow.common.exception.BusinessException;
 import az.abb.embassyflow.common.exception.ErrorCodes;
+import az.abb.embassyflow.customer.service.CustomerService;
 import az.abb.embassyflow.embassy.service.EmbassyService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.repository.DocumentOrderRepository;
@@ -40,6 +41,9 @@ class OrderServiceTest {
 
     @Mock
     private EmbassyService embassyService;
+
+    @Mock
+    private CustomerService customerService;
 
     @InjectMocks
     private OrderService orderService;
@@ -124,6 +128,62 @@ class OrderServiceTest {
                 () -> orderService.updateOrder(501L, new UpdateOrderRequest(999L, Language.AZ)));
 
         assertEquals(ErrorCodes.EMBASSY_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void linkIdentity_linksCustomerAndAdvancesStatus() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.CREATED);
+        when(customerService.exists(42L)).thenReturn(true);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        OrderUpdatedResponse response = orderService.linkIdentity(501L, 42L, 42L);
+
+        assertEquals("OTP_VERIFIED", response.status());
+        assertEquals(42L, order.getCustomerId());
+        assertEquals(OrderStatus.OTP_VERIFIED, order.getStatus());
+        assertEquals(1, order.getTimeline().size());
+        assertEquals(TimelineStep.OTP_VERIFIED, order.getTimeline().get(0).getStep());
+    }
+
+    @Test
+    void linkIdentity_missingToken_throwsUnauthorized() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.linkIdentity(501L, 42L, null));
+
+        assertEquals(ErrorCodes.UNAUTHORIZED, ex.getCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
+    }
+
+    @Test
+    void linkIdentity_tokenMismatch_throwsUnauthorized() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.linkIdentity(501L, 42L, 43L));
+
+        assertEquals(ErrorCodes.UNAUTHORIZED, ex.getCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
+    }
+
+    @Test
+    void linkIdentity_unknownCustomer_throwsCustomerNotFound() {
+        when(customerService.exists(42L)).thenReturn(false);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.linkIdentity(501L, 42L, 42L));
+
+        assertEquals(ErrorCodes.CUSTOMER_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void linkIdentity_orderNotFound_throwsOrderNotFound() {
+        when(customerService.exists(42L)).thenReturn(true);
+        when(orderRepository.findById(501L)).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.linkIdentity(501L, 42L, 42L));
+
+        assertEquals(ErrorCodes.ORDER_NOT_FOUND, ex.getCode());
         assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
     }
 }

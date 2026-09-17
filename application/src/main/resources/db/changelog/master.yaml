@@ -3,3 +3,7 @@ databaseChangeLog:
       file: db/changelog/001-document-orders.yaml
   - include:
       file: db/changelog/002-embassies.yaml
+  - include:
+      file: db/changelog/003-customers.yaml
+  - include:
+      file: db/changelog/004-order-customer.yaml
