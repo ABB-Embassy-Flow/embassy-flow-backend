@@ -9,6 +9,7 @@ import az.abb.embassyflow.common.exception.ErrorCodes;
 import az.abb.embassyflow.customer.dao.entity.Account;
 import az.abb.embassyflow.customer.dao.entity.Card;
 import az.abb.embassyflow.customer.dao.repository.AccountRepository;
+import az.abb.embassyflow.customer.dao.repository.CardRepository;
 import az.abb.embassyflow.customer.dao.repository.CustomerRepository;
 import az.abb.embassyflow.customer.dto.response.AccountResponse;
 import az.abb.embassyflow.customer.enums.AccountType;
@@ -30,6 +31,9 @@ class CustomerServiceTest {
 
     @Mock
     private AccountRepository accountRepository;
+
+    @Mock
+    private CardRepository cardRepository;
 
     @InjectMocks
     private CustomerService customerService;
@@ -84,6 +88,24 @@ class CustomerServiceTest {
 
         assertEquals(ErrorCodes.CUSTOMER_NOT_FOUND, ex.getCode());
         assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void validateCardForCustomer_unknownCard_throwsCardNotFound() {
+        when(cardRepository.existsByIdAndAccount_CustomerIdAndActiveTrue(21L, 1L)).thenReturn(false);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> customerService.validateCardForCustomer(21L, 1L));
+
+        assertEquals(ErrorCodes.CARD_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void validateCardForCustomer_validCard_doesNotThrow() {
+        when(cardRepository.existsByIdAndAccount_CustomerIdAndActiveTrue(21L, 1L)).thenReturn(true);
+
+        customerService.validateCardForCustomer(21L, 1L);
     }
 
     private Account account(BigDecimal balance, AccountType type) {

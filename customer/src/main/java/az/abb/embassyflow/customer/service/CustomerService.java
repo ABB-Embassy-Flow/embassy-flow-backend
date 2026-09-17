@@ -6,6 +6,7 @@ import az.abb.embassyflow.customer.dao.entity.Account;
 import az.abb.embassyflow.customer.dao.entity.Card;
 import az.abb.embassyflow.customer.dao.entity.Customer;
 import az.abb.embassyflow.customer.dao.repository.AccountRepository;
+import az.abb.embassyflow.customer.dao.repository.CardRepository;
 import az.abb.embassyflow.customer.dao.repository.CustomerRepository;
 import az.abb.embassyflow.customer.dto.response.AccountResponse;
 import az.abb.embassyflow.customer.dto.response.CardResponse;
@@ -20,10 +21,13 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
+    private final CardRepository cardRepository;
 
-    public CustomerService(CustomerRepository customerRepository, AccountRepository accountRepository) {
+    public CustomerService(CustomerRepository customerRepository, AccountRepository accountRepository,
+                           CardRepository cardRepository) {
         this.customerRepository = customerRepository;
         this.accountRepository = accountRepository;
+        this.cardRepository = cardRepository;
     }
 
     public record CustomerInfo(Long id, String fullName, String phone) {
@@ -67,6 +71,13 @@ public class CustomerService {
         if (!accountRepository.existsByIdAndCustomerIdAndActiveTrue(accountId, customerId)) {
             throw new BusinessException(
                     ErrorCodes.ACCOUNT_NOT_FOUND, "error.account_not_found", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void validateCardForCustomer(Long cardId, Long customerId) {
+        if (!cardRepository.existsByIdAndAccount_CustomerIdAndActiveTrue(cardId, customerId)) {
+            throw new BusinessException(ErrorCodes.CARD_NOT_FOUND, "error.card_not_found", HttpStatus.NOT_FOUND);
         }
     }
 

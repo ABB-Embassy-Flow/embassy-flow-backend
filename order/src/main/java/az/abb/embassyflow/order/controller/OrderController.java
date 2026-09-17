@@ -4,14 +4,17 @@ import az.abb.embassyflow.common.web.AuthAttributes;
 import az.abb.embassyflow.order.dto.request.AddOrderItemsRequest;
 import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
 import az.abb.embassyflow.order.dto.request.LinkIdentityRequest;
+import az.abb.embassyflow.order.dto.request.PayRequest;
 import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
 import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
+import az.abb.embassyflow.order.dto.response.PaymentResponse;
 import az.abb.embassyflow.order.dto.response.PreviewResponse;
 import az.abb.embassyflow.order.service.DocumentService;
 import az.abb.embassyflow.order.service.OrderService;
+import az.abb.embassyflow.order.service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,10 +33,13 @@ public class OrderController {
 
     private final OrderService orderService;
     private final DocumentService documentService;
+    private final PaymentService paymentService;
 
-    public OrderController(OrderService orderService, DocumentService documentService) {
+    public OrderController(OrderService orderService, DocumentService documentService,
+                           PaymentService paymentService) {
         this.orderService = orderService;
         this.documentService = documentService;
+        this.paymentService = paymentService;
     }
 
     @PostMapping
@@ -75,5 +81,13 @@ public class OrderController {
                                    @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
                                            required = false) Long authenticatedCustomerId) {
         return documentService.generatePreview(orderId, authenticatedCustomerId);
+    }
+
+    @PostMapping("/{orderId}/pay")
+    public PaymentResponse pay(@PathVariable Long orderId,
+                               @Valid @RequestBody PayRequest request,
+                               @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
+                                       required = false) Long authenticatedCustomerId) {
+        return paymentService.pay(orderId, request, authenticatedCustomerId);
     }
 }

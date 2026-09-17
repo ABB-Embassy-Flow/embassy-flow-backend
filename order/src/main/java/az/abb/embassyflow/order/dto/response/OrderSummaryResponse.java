@@ -17,5 +17,6 @@ public record OrderSummaryResponse(
         String embassyName,
         Instant createdAt,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "0.00") BigDecimal totalAmount,
-        List<OrderItemResponse> items) {
+        List<OrderItemResponse> items,
+        List<TimelineResponse> timeline) {
 }

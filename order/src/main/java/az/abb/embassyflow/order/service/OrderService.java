@@ -16,6 +16,7 @@ import az.abb.embassyflow.order.dto.response.OrderItemResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
 import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
+import az.abb.embassyflow.order.dto.response.TimelineResponse;
 import az.abb.embassyflow.order.enums.DocumentType;
 import az.abb.embassyflow.order.enums.OrderStatus;
 import az.abb.embassyflow.order.enums.TimelineStep;
@@ -133,7 +134,8 @@ public class OrderService {
 
         return new OrderSummaryResponse(order.getId(), order.getOrderNumber(), order.getDocumentType(),
                 order.getStatus().name(), order.getLanguage(), order.getEmbassyId(), embassyName,
-                order.getCreatedAt(), order.getDocumentType().getPrice(), toItemResponses(order));
+                order.getCreatedAt(), order.getDocumentType().getPrice(), toItemResponses(order),
+                toTimelineResponses(order));
     }
 
     DocumentOrder requireOwnedOrder(Long orderId, Long authenticatedCustomerId) {
@@ -162,6 +164,13 @@ public class OrderService {
         return order.getItems().stream()
                 .map(item -> new OrderItemResponse(item.getId(), item.getAccountId(), item.getLanguage(),
                         item.getPeriod(), item.getStatementType(), item.isEquivalentCurrency()))
+                .toList();
+    }
+
+    private static List<TimelineResponse> toTimelineResponses(DocumentOrder order) {
+        return order.getTimeline().stream()
+                .map(entry -> new TimelineResponse(entry.getStep(),
+                        entry.getStep().description(order.getLanguage()), entry.getCreatedAt()))
                 .toList();
     }
 }

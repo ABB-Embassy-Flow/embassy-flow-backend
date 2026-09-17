@@ -9,6 +9,8 @@ public final class ErrorCodes {
     public static final String EMBASSY_NOT_FOUND = "EMBASSY_NOT_FOUND";
     public static final String CUSTOMER_NOT_FOUND = "CUSTOMER_NOT_FOUND";
     public static final String ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
+    public static final String CARD_NOT_FOUND = "CARD_NOT_FOUND";
+    public static final String PAYMENT_FAILED = "PAYMENT_FAILED";
     public static final String INVALID_OTP = "INVALID_OTP";
     public static final String UNAUTHORIZED = "UNAUTHORIZED";
     public static final String CONFLICT = "CONFLICT";

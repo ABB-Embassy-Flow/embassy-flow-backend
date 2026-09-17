@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/006-order-items.yaml
   - include:
       file: db/changelog/007-order-verification.yaml
+  - include:
+      file: db/changelog/008-payments.yaml
