@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/004-order-customer.yaml
   - include:
       file: db/changelog/005-accounts-cards.yaml
+  - include:
+      file: db/changelog/006-order-items.yaml

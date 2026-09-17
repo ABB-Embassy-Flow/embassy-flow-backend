@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,14 +14,22 @@ import az.abb.embassyflow.customer.service.CustomerService;
 import az.abb.embassyflow.embassy.service.EmbassyService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.repository.DocumentOrderRepository;
+import az.abb.embassyflow.order.dto.request.AddOrderItemsRequest;
 import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
+import az.abb.embassyflow.order.dto.request.OrderItemRequest;
 import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
+import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
+import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
 import az.abb.embassyflow.order.enums.DocumentType;
 import az.abb.embassyflow.order.enums.Language;
 import az.abb.embassyflow.order.enums.OrderStatus;
+import az.abb.embassyflow.order.enums.Period;
+import az.abb.embassyflow.order.enums.StatementType;
 import az.abb.embassyflow.order.enums.TimelineStep;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -182,6 +191,100 @@ class OrderServiceTest {
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> orderService.linkIdentity(501L, 42L, 42L));
+
+        assertEquals(ErrorCodes.ORDER_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    private DocumentOrder verifiedOrder() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.OTP_VERIFIED);
+        order.setCustomerId(42L);
+        return order;
+    }
+
+    private AddOrderItemsRequest singleItemRequest() {
+        return new AddOrderItemsRequest(List.of(
+                new OrderItemRequest(11L, Language.EN, Period.THREE_MONTHS, StatementType.ALL, true)));
+    }
+
+    @Test
+    void addItems_replacesItemsAndReturnsPrice() {
+        DocumentOrder order = verifiedOrder();
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        OrderItemsResponse response = orderService.addItems(501L, singleItemRequest(), 42L);
+
+        assertEquals(1, response.items().size());
+        assertEquals(11L, response.items().get(0).accountId());
+        assertEquals(Period.THREE_MONTHS, response.items().get(0).period());
+        assertEquals(StatementType.ALL, response.items().get(0).statementType());
+        assertEquals(new BigDecimal("10.00"), response.totalAmount());
+        assertEquals(1, order.getItems().size());
+        assertNotNull(order.getItems().get(0).getOrder());
+        verify(customerService).validateAccountForCustomer(11L, 42L);
+    }
+
+    @Test
+    void addItems_wrongStatus_throwsConflict() {
+        DocumentOrder order = order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.CREATED);
+        order.setCustomerId(42L);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.addItems(501L, singleItemRequest(), 42L));
+
+        assertEquals(ErrorCodes.CONFLICT, ex.getCode());
+        assertEquals(HttpStatus.CONFLICT, ex.getHttpStatus());
+    }
+
+    @Test
+    void addItems_unknownAccount_throwsAccountNotFound() {
+        DocumentOrder order = verifiedOrder();
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+        doThrow(new BusinessException(ErrorCodes.ACCOUNT_NOT_FOUND, "error.account_not_found",
+                HttpStatus.NOT_FOUND)).when(customerService).validateAccountForCustomer(11L, 42L);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.addItems(501L, singleItemRequest(), 42L));
+
+        assertEquals(ErrorCodes.ACCOUNT_NOT_FOUND, ex.getCode());
+        assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void addItems_tokenMismatch_throwsUnauthorized() {
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(verifiedOrder()));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.addItems(501L, singleItemRequest(), 43L));
+
+        assertEquals(ErrorCodes.UNAUTHORIZED, ex.getCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
+    }
+
+    @Test
+    void getOrder_returnsSummaryWithEmbassyName() {
+        DocumentOrder order = verifiedOrder();
+        order.setEmbassyId(1L);
+        when(orderRepository.findById(501L)).thenReturn(Optional.of(order));
+        when(embassyService.findName(1L)).thenReturn(Optional.of("İtaliya səfirliyi"));
+
+        OrderSummaryResponse response = orderService.getOrder(501L, 42L);
+
+        assertEquals("AR-2026-000001", response.orderNumber());
+        assertEquals(DocumentType.EMBASSY_CERTIFICATE, response.documentType());
+        assertEquals("OTP_VERIFIED", response.status());
+        assertEquals(1L, response.embassyId());
+        assertEquals("İtaliya səfirliyi", response.embassyName());
+        assertEquals(new BigDecimal("10.00"), response.totalAmount());
+    }
+
+    @Test
+    void getOrder_orderNotFound_throwsOrderNotFound() {
+        when(orderRepository.findById(501L)).thenReturn(Optional.empty());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.getOrder(501L, 42L));
 
         assertEquals(ErrorCodes.ORDER_NOT_FOUND, ex.getCode());
         assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());

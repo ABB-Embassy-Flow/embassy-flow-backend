@@ -62,6 +62,14 @@ public class CustomerService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public void validateAccountForCustomer(Long accountId, Long customerId) {
+        if (!accountRepository.existsByIdAndCustomerIdAndActiveTrue(accountId, customerId)) {
+            throw new BusinessException(
+                    ErrorCodes.ACCOUNT_NOT_FOUND, "error.account_not_found", HttpStatus.NOT_FOUND);
+        }
+    }
+
     private CustomerInfo toInfo(Customer customer) {
         return new CustomerInfo(customer.getId(), customer.getFullName(), customer.getPhone());
     }

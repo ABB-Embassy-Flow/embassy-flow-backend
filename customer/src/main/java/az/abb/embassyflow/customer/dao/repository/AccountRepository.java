@@ -9,4 +9,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @EntityGraph(attributePaths = "cards")
     List<Account> findByCustomerIdAndActiveTrueOrderById(Long customerId);
+
+    boolean existsByIdAndCustomerIdAndActiveTrue(Long id, Long customerId);
 }

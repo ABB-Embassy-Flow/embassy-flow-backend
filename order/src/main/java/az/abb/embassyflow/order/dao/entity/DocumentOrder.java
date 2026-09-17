@@ -50,11 +50,23 @@ public class DocumentOrder extends AuditableEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderTimeline> timeline = new ArrayList<>();
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items = new ArrayList<>();
+
     public void addTimeline(TimelineStep step) {
         OrderTimeline entry = new OrderTimeline();
         entry.setOrder(this);
         entry.setStep(step);
         this.timeline.add(entry);
+    }
+
+    public void addItem(OrderItem item) {
+        item.setOrder(this);
+        this.items.add(item);
+    }
+
+    public void clearItems() {
+        this.items.clear();
     }
 
     public Long getId() {
@@ -111,5 +123,9 @@ public class DocumentOrder extends AuditableEntity {
 
     public List<OrderTimeline> getTimeline() {
         return timeline;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
     }
 }
