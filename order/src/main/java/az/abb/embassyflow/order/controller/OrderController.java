@@ -6,12 +6,14 @@ import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
 import az.abb.embassyflow.order.dto.request.LinkIdentityRequest;
 import az.abb.embassyflow.order.dto.request.PayRequest;
 import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
+import az.abb.embassyflow.order.dto.response.CustomerOrdersResponse;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
 import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
 import az.abb.embassyflow.order.dto.response.PaymentResponse;
 import az.abb.embassyflow.order.dto.response.PreviewResponse;
+import az.abb.embassyflow.order.enums.OrderFilter;
 import az.abb.embassyflow.order.service.DocumentService;
 import az.abb.embassyflow.order.service.OrderService;
 import az.abb.embassyflow.order.service.PaymentService;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -74,6 +77,14 @@ public class OrderController {
                                          @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
                                                  required = false) Long authenticatedCustomerId) {
         return orderService.getOrder(orderId, authenticatedCustomerId);
+    }
+
+    @GetMapping
+    public CustomerOrdersResponse listOrders(@RequestParam Long customerId,
+                                             @RequestParam(defaultValue = "ALL") OrderFilter status,
+                                             @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
+                                                     required = false) Long authenticatedCustomerId) {
+        return orderService.listOrders(customerId, status, authenticatedCustomerId);
     }
 
     @PostMapping("/{orderId}/preview")

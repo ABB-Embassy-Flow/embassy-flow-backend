@@ -14,6 +14,9 @@ public final class ErrorCodes {
     public static final String INVALID_OTP = "INVALID_OTP";
     public static final String UNAUTHORIZED = "UNAUTHORIZED";
     public static final String CONFLICT = "CONFLICT";
+    public static final String DOCUMENT_NOT_FOUND = "DOCUMENT_NOT_FOUND";
+    public static final String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
+    public static final String INVALID_VERIFICATION_CODE = "INVALID_VERIFICATION_CODE";
 
     private ErrorCodes() {
     }

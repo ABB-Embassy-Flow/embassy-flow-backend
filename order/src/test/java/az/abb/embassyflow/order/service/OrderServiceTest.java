@@ -18,12 +18,14 @@ import az.abb.embassyflow.order.dto.request.AddOrderItemsRequest;
 import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
 import az.abb.embassyflow.order.dto.request.OrderItemRequest;
 import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
+import az.abb.embassyflow.order.dto.response.CustomerOrdersResponse;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
 import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
 import az.abb.embassyflow.order.enums.DocumentType;
 import az.abb.embassyflow.order.enums.Language;
+import az.abb.embassyflow.order.enums.OrderFilter;
 import az.abb.embassyflow.order.enums.OrderStatus;
 import az.abb.embassyflow.order.enums.Period;
 import az.abb.embassyflow.order.enums.StatementType;
@@ -288,5 +290,38 @@ class OrderServiceTest {
 
         assertEquals(ErrorCodes.ORDER_NOT_FOUND, ex.getCode());
         assertEquals(HttpStatus.NOT_FOUND, ex.getHttpStatus());
+    }
+
+    @Test
+    void listOrders_allReturnsEveryOrder() {
+        when(orderRepository.findByCustomerIdOrderByIdDesc(42L)).thenReturn(List.of(
+                order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.PAYMENT_RECEIVED),
+                order(DocumentType.ACCOUNT_STATEMENT, OrderStatus.COMPLETED)));
+
+        CustomerOrdersResponse response = orderService.listOrders(42L, OrderFilter.ALL, 42L);
+
+        assertEquals(2, response.orders().size());
+    }
+
+    @Test
+    void listOrders_pendingFiltersOutFinalStates() {
+        when(orderRepository.findByCustomerIdOrderByIdDesc(42L)).thenReturn(List.of(
+                order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.OTP_VERIFIED),
+                order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.SIGNED),
+                order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.COMPLETED),
+                order(DocumentType.EMBASSY_CERTIFICATE, OrderStatus.REJECTED)));
+
+        CustomerOrdersResponse response = orderService.listOrders(42L, OrderFilter.PENDING, 42L);
+
+        assertEquals(2, response.orders().size());
+    }
+
+    @Test
+    void listOrders_tokenMismatch_throwsUnauthorized() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> orderService.listOrders(42L, OrderFilter.ALL, 43L));
+
+        assertEquals(ErrorCodes.UNAUTHORIZED, ex.getCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, ex.getHttpStatus());
     }
 }

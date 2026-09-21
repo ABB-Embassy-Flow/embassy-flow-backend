@@ -11,6 +11,8 @@ import az.abb.embassyflow.order.dto.request.AddOrderItemsRequest;
 import az.abb.embassyflow.order.dto.request.CreateOrderRequest;
 import az.abb.embassyflow.order.dto.request.OrderItemRequest;
 import az.abb.embassyflow.order.dto.request.UpdateOrderRequest;
+import az.abb.embassyflow.order.dto.response.CustomerOrderResponse;
+import az.abb.embassyflow.order.dto.response.CustomerOrdersResponse;
 import az.abb.embassyflow.order.dto.response.OrderCreatedResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemResponse;
 import az.abb.embassyflow.order.dto.response.OrderItemsResponse;
@@ -18,6 +20,7 @@ import az.abb.embassyflow.order.dto.response.OrderSummaryResponse;
 import az.abb.embassyflow.order.dto.response.OrderUpdatedResponse;
 import az.abb.embassyflow.order.dto.response.TimelineResponse;
 import az.abb.embassyflow.order.enums.DocumentType;
+import az.abb.embassyflow.order.enums.OrderFilter;
 import az.abb.embassyflow.order.enums.OrderStatus;
 import az.abb.embassyflow.order.enums.TimelineStep;
 import java.util.List;
@@ -172,5 +175,31 @@ public class OrderService {
                 .map(entry -> new TimelineResponse(entry.getStep(),
                         entry.getStep().description(order.getLanguage()), entry.getCreatedAt()))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerOrdersResponse listOrders(Long customerId, OrderFilter filter, Long authenticatedCustomerId) {
+        if (authenticatedCustomerId == null || !authenticatedCustomerId.equals(customerId)) {
+            throw new BusinessException(ErrorCodes.UNAUTHORIZED, "error.unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        List<CustomerOrderResponse> orders = orderRepository.findByCustomerIdOrderByIdDesc(customerId).stream()
+                .filter(order -> matches(filter, order.getStatus()))
+                .map(order -> new CustomerOrderResponse(order.getId(), order.getOrderNumber(),
+                        order.getDocumentType(), order.getStatus().name(), order.getCreatedAt(),
+                        order.getDocumentType().getPrice()))
+                .toList();
+
+        return new CustomerOrdersResponse(orders);
+    }
+
+    private static boolean matches(OrderFilter filter, OrderStatus status) {
+        return switch (filter) {
+            case ALL -> true;
+            case PENDING -> status == OrderStatus.OTP_VERIFIED || status == OrderStatus.PAYMENT_RECEIVED
+                    || status == OrderStatus.PROCESSING || status == OrderStatus.SIGNED;
+            case COMPLETED -> status == OrderStatus.DELIVERED || status == OrderStatus.COMPLETED;
+            case REJECTED -> status == OrderStatus.REJECTED;
+        };
     }
 }
