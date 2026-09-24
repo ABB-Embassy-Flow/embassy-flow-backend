@@ -81,7 +81,7 @@ class AuthServiceTest {
         assertEquals(6, saved.getCode().length());
         assertTrue(saved.getExpiresAt().isAfter(Instant.now()));
         assertEquals("+994 50 *** ** 82", response.sentTo());
-        assertEquals(60, response.expiresInSeconds());
+        assertEquals(63, response.expiresInSeconds());
         assertEquals(saved.getCode(), response.demoOtp());
     }
 

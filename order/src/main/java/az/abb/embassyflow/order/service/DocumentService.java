@@ -73,6 +73,11 @@ public class DocumentService {
         return new PreviewResponse(order.getOrderNumber(), html, qrCode, verificationCode);
     }
 
+    public String renderHtml(DocumentOrder order) {
+        String code = ensureVerificationCode(order);
+        return buildHtml(order, code);
+    }
+
     private String ensureVerificationCode(DocumentOrder order) {
         if (order.getVerificationCode() != null) {
             return order.getVerificationCode();
@@ -101,9 +106,17 @@ public class DocumentService {
         String customerLabel = az ? "Müştəri" : "Customer";
         String embassyLabel = az ? "Səfirlik" : "Embassy";
         String dateLabel = az ? "Tarix" : "Date";
-        String totalLabel = az ? "Ümumi məbləğ" : "Total";
+        String statusLabel = az ? "Status" : "Status";
+        String validLabel = az ? "Etibarlıdır" : "Valid";
+        String totalLabel = az ? "Ümumi məbləğ" : "Total amount";
+        String feeLabel = az ? "Xidmət haqqı" : "Service fee";
+        String commissionLabel = az ? "Əməliyyat komissiyası" : "Transaction commission";
+        String copiesLabel = az ? "Nüsxə sayı" : "Number of copies";
+        String oneUnitLabel = az ? "1 ədəd" : "1 unit";
         String codeLabel = az ? "Yoxlama kodu" : "Verification code";
         String noLabel = az ? "Sənəd No" : "Document No";
+        String qrLabel = az ? "QR kodu ilə yoxlayın" : "Verify with the QR code";
+        String signLabel = az ? "Rəqəmsal imza" : "Digital signature";
 
         String customerName = customerService.findById(order.getCustomerId())
                 .map(CustomerService.CustomerInfo::fullName)
@@ -135,22 +148,56 @@ public class DocumentService {
                 + "</th><th>" + (az ? "Müddət" : "Period") + "</th><th>" + (az ? "Növ" : "Type")
                 + "</th><th>" + (az ? "Ekvivalent" : "Equivalent") + "</th>";
 
-        return "<div style=\"font-family:Arial,Helvetica,sans-serif;max-width:640px;margin:0 auto;"
-                + "padding:24px;border:1px solid #e0e0e0;\">"
-                + "<h2 style=\"color:#e30613;margin:0 0 4px;\">ABB</h2>"
-                + "<h3 style=\"margin:0 0 16px;\">" + title + "</h3>"
-                + "<p><b>" + noLabel + ":</b> " + escape(order.getOrderNumber()) + "</p>"
-                + "<p><b>" + dateLabel + ":</b> "
-                + (order.getCreatedAt() == null ? "" : DATE_FORMAT.format(order.getCreatedAt())) + "</p>"
-                + "<p><b>" + customerLabel + ":</b> " + escape(customerName) + "</p>"
-                + (embassyName.isEmpty() ? "" : "<p><b>" + embassyLabel + ":</b> " + escape(embassyName) + "</p>")
-                + "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"6\" "
-                + "style=\"border-collapse:collapse;\" border=\"1\"><thead><tr>" + head + "</tr></thead>"
+        String price = order.getDocumentType().getPrice() + " " + order.getDocumentType().getCurrency();
+        String date = order.getCreatedAt() == null ? "" : DATE_FORMAT.format(order.getCreatedAt());
+
+        return "<div style=\"font-family:Arial,Helvetica,sans-serif;max-width:720px;margin:0 auto;color:#1a1a1a;\">"
+                + "<div style=\"background:#e30613;color:#fff;padding:18px 28px;border-radius:8px 8px 0 0;"
+                + "display:flex;justify-content:space-between;align-items:center;\">"
+                + "<div><div style=\"font-size:26px;font-weight:700;letter-spacing:1px;\">ABB</div>"
+                + "<div style=\"font-size:12px;opacity:.85;\">"
+                + (az ? "Rəqəmsal Sənəd Sifarişi" : "ABB Digital Document Service") + "</div></div>"
+                + "<div style=\"text-align:right;\"><div style=\"font-size:18px;font-weight:600;\">"
+                + escape(title) + "</div><div style=\"font-size:12px;opacity:.85;\">"
+                + escape(noLabel) + ": " + escape(order.getOrderNumber()) + "</div></div>"
+                + "</div>"
+                + "<div style=\"border:1px solid #e0e0e0;border-top:none;padding:28px;border-radius:0 0 8px 8px;"
+                + "background:#fff;\">"
+                + "<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:18px;\">"
+                + "<tr><td style=\"padding:4px 0;\"><b>" + escape(noLabel) + ":</b> "
+                + escape(order.getOrderNumber()) + "</td><td style=\"padding:4px 0;text-align:right;\"><b>"
+                + escape(dateLabel) + ":</b> " + escape(date) + "</td></tr>"
+                + "<tr><td style=\"padding:4px 0;\"><b>" + escape(customerLabel) + ":</b> "
+                + escape(customerName) + "</td><td style=\"padding:4px 0;text-align:right;\"><b>"
+                + escape(statusLabel) + ":</b> <span style=\"color:#19a260;\">" + escape(validLabel)
+                + "</span></td></tr>"
+                + (embassyName.isEmpty() ? "" : "<tr><td style=\"padding:4px 0;\"><b>" + escape(embassyLabel)
+                + ":</b> " + escape(embassyName) + "</td><td></td></tr>")
+                + "</table>"
+                + "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"8\" border=\"1\" "
+                + "style=\"border-collapse:collapse;border-color:#dde3ec;font-size:13px;\">"
+                + "<thead><tr style=\"background:#f6f8ff;\">" + head + "</tr></thead>"
                 + "<tbody>" + rows + "</tbody></table>"
-                + "<p><b>" + totalLabel + ":</b> " + order.getDocumentType().getPrice() + " "
-                + order.getDocumentType().getCurrency() + "</p>"
-                + "<p style=\"font-size:12px;color:#666;\">" + codeLabel + ": " + verificationCode + "</p>"
-                + "</div>";
+                + "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"6\" border=\"1\" "
+                + "style=\"border-collapse:collapse;border-color:#dde3ec;font-size:13px;margin-top:16px;\">"
+                + "<tr><td>" + escape(copiesLabel) + "</td><td>" + escape(oneUnitLabel) + "</td></tr>"
+                + "<tr><td>" + escape(feeLabel) + "</td><td>" + escape(price) + "</td></tr>"
+                + "<tr><td>" + escape(commissionLabel) + "</td><td>0.00 " + order.getDocumentType().getCurrency()
+                + "</td></tr>"
+                + "<tr style=\"font-weight:700;background:#f6f8ff;\"><td>" + escape(totalLabel)
+                + "</td><td>" + escape(price) + "</td></tr>"
+                + "</table>"
+                + "<div style=\"display:flex;justify-content:space-between;align-items:center;"
+                + "margin-top:22px;padding-top:18px;border-top:2px solid #e30613;\">"
+                + "<div style=\"font-size:11px;color:#444;\">" + escape(qrLabel) + "</div>"
+                + "<div style=\"text-align:center;\">"
+                + "<div style=\"font-size:12px;color:#555;margin-bottom:6px;\">" + escape(codeLabel)
+                + "</div><div style=\"font-weight:700;letter-spacing:2px;font-size:18px;color:#e30613;\">"
+                + escape(verificationCode) + "</div></div>"
+                + "</div>"
+                + "<div style=\"text-align:right;margin-top:26px;font-size:12px;color:#555;\">"
+                + "... ...<div style=\"margin-top:4px;\">" + escape(signLabel) + " | ABB</div></div>"
+                + "</div></div>";
     }
 
     private static String toQrDataUri(String content) {

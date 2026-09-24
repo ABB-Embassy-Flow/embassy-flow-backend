@@ -50,6 +50,9 @@ public class DocumentOrder extends AuditableEntity {
     @Column(name = "verification_code", unique = true, length = 20)
     private String verificationCode;
 
+    @Column(name = "rejection_note", length = 500)
+    private String rejectionNote;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderTimeline> timeline = new ArrayList<>();
 
@@ -130,6 +133,14 @@ public class DocumentOrder extends AuditableEntity {
 
     public void setVerificationCode(String verificationCode) {
         this.verificationCode = verificationCode;
+    }
+
+    public String getRejectionNote() {
+        return rejectionNote;
+    }
+
+    public void setRejectionNote(String rejectionNote) {
+        this.rejectionNote = rejectionNote;
     }
 
     public List<OrderTimeline> getTimeline() {

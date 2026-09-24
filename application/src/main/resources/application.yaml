@@ -23,3 +23,9 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+demo:
+  otp: ${DEMO_OTP:123456}
+
+app:
+  verify-base-url: ${VERIFY_BASE_URL:http://localhost:8080/api/v1/portal/documents}

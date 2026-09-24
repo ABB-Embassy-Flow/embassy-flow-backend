@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
-    private static final int OTP_TTL_SECONDS = 60;
+    private static final int OTP_TTL_SECONDS = 63;
     private static final int TOKEN_TTL_SECONDS = 3600;
     private static final String TOKEN_TYPE = "Bearer";
 

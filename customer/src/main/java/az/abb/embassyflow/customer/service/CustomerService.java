@@ -33,6 +33,9 @@ public class CustomerService {
     public record CustomerInfo(Long id, String fullName, String phone) {
     }
 
+    public record CustomerPortalInfo(Long id, String fullName, String fin) {
+    }
+
     @Transactional(readOnly = true)
     public Optional<CustomerInfo> findByFin(String fin) {
         return customerRepository.findByFin(fin)
@@ -48,6 +51,12 @@ public class CustomerService {
     @Transactional(readOnly = true)
     public boolean exists(Long id) {
         return customerRepository.existsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<CustomerPortalInfo> findPortalInfo(Long id) {
+        return customerRepository.findById(id)
+                .map(customer -> new CustomerPortalInfo(customer.getId(), customer.getFullName(), customer.getFin()));
     }
 
     @Transactional(readOnly = true)
