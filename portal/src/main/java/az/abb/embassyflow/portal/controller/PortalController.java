@@ -12,6 +12,8 @@ import az.abb.embassyflow.portal.dto.response.PortalStatusUpdateResponse;
 import az.abb.embassyflow.portal.dto.response.PortalVerifyResponse;
 import az.abb.embassyflow.portal.service.PortalAuthService;
 import az.abb.embassyflow.portal.service.PortalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Embassy Portal", description = "Səfirlik portalı — sifarişlərin idarə edilməsi")
 @RestController
 @RequestMapping("/api/v1/portal")
 public class PortalController {
@@ -36,17 +39,20 @@ public class PortalController {
         this.portalService = portalService;
     }
 
+    @Operation(summary = "Portal girişi (demo: admin@italy / demo1234)")
     @PostMapping("/auth/login")
     public PortalLoginResponse login(@Valid @RequestBody PortalLoginRequest request) {
         return portalAuthService.login(request);
     }
 
+    @Operation(summary = "Portal statistika kartları")
     @GetMapping("/stats")
     public PortalStatsResponse stats(@RequestAttribute(name = AuthAttributes.PORTAL_USER_ID,
             required = false) Long portalUserId) {
         return portalService.stats(portalUserId);
     }
 
+    @Operation(summary = "Sənəd siyahısı (axtarış/filtr/səhifələmə)")
     @GetMapping("/documents")
     public PortalDocumentsResponse documents(@RequestParam(required = false) String search,
                                              @RequestParam(defaultValue = "ALL") OrderFilter status,
@@ -57,6 +63,7 @@ public class PortalController {
         return portalService.documents(search, status, page, size, portalUserId);
     }
 
+    @Operation(summary = "Sənəd detalları")
     @GetMapping("/documents/{documentNumber}")
     public PortalDocumentDetailResponse documentDetail(@PathVariable String documentNumber,
                                                        @RequestAttribute(name = AuthAttributes.PORTAL_USER_ID,
@@ -64,6 +71,7 @@ public class PortalController {
         return portalService.documentDetail(documentNumber, portalUserId);
     }
 
+    @Operation(summary = "Sənəd statusunu güncəllə (möhür/rədd)")
     @PutMapping("/documents/{documentNumber}/status")
     public PortalStatusUpdateResponse updateStatus(@PathVariable String documentNumber,
                                                    @Valid @RequestBody UpdateDocumentStatusRequest request,
@@ -72,11 +80,13 @@ public class PortalController {
         return portalService.updateStatus(documentNumber, request, portalUserId);
     }
 
+    @Operation(summary = "Sənədin həqiqiliyini təsdiqlə (təhlükəsizlik kodu)")
     @GetMapping("/documents/{documentNumber}/verify")
     public PortalVerifyResponse verify(@PathVariable String documentNumber, @RequestParam String code) {
         return portalService.verify(documentNumber, code);
     }
 
+    @Operation(summary = "Sənədi endir (PDF)")
     @GetMapping("/documents/{documentNumber}/download")
     public ResponseEntity<byte[]> download(@PathVariable String documentNumber,
                                            @RequestAttribute(name = AuthAttributes.PORTAL_USER_ID,

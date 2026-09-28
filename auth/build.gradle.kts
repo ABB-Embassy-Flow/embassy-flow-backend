@@ -13,6 +13,7 @@ dependencies {
     implementation(libs.spring.webmvc)
     implementation(libs.jakarta.servlet)
     implementation(libs.jackson.annotations)
+    implementation(libs.swagger.annotations)
 
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)

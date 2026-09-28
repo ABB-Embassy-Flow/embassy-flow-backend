@@ -17,6 +17,8 @@ import az.abb.embassyflow.order.enums.OrderFilter;
 import az.abb.embassyflow.order.service.DocumentService;
 import az.abb.embassyflow.order.service.OrderService;
 import az.abb.embassyflow.order.service.PaymentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Orders", description = "Sifariş (draft → sənəd → ödəniş) axını")
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
@@ -45,17 +48,20 @@ public class OrderController {
         this.paymentService = paymentService;
     }
 
+    @Operation(summary = "Yeni sifariş draftı yarat")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public OrderCreatedResponse createDraft(@Valid @RequestBody CreateOrderRequest request) {
         return orderService.createDraft(request);
     }
 
+    @Operation(summary = "Sifarişi güncəllə")
     @PutMapping("/{orderId}")
     public OrderUpdatedResponse update(@PathVariable Long orderId, @Valid @RequestBody UpdateOrderRequest request) {
         return orderService.updateOrder(orderId, request);
     }
 
+    @Operation(summary = "Sifarişə FİN/şəxsiyyət əlaqələndir")
     @PutMapping("/{orderId}/identity")
     public OrderUpdatedResponse linkIdentity(@PathVariable Long orderId,
                                              @Valid @RequestBody LinkIdentityRequest request,
@@ -64,6 +70,7 @@ public class OrderController {
         return orderService.linkIdentity(orderId, request.customerId(), authenticatedCustomerId);
     }
 
+    @Operation(summary = "Sənəd detallarını (hesab/dövr) əlavə et")
     @PostMapping("/{orderId}/items")
     public OrderItemsResponse addItems(@PathVariable Long orderId,
                                        @Valid @RequestBody AddOrderItemsRequest request,
@@ -72,6 +79,7 @@ public class OrderController {
         return orderService.addItems(orderId, request, authenticatedCustomerId);
     }
 
+    @Operation(summary = "Sifarişi əldə et")
     @GetMapping("/{orderId}")
     public OrderSummaryResponse getOrder(@PathVariable Long orderId,
                                          @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
@@ -79,14 +87,16 @@ public class OrderController {
         return orderService.getOrder(orderId, authenticatedCustomerId);
     }
 
+    @Operation(summary = "Müştərinin sifariş siyahısı")
     @GetMapping
     public CustomerOrdersResponse listOrders(@RequestParam Long customerId,
-                                             @RequestParam(defaultValue = "ALL") OrderFilter status,
-                                             @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
-                                                     required = false) Long authenticatedCustomerId) {
+                                              @RequestParam(defaultValue = "ALL") OrderFilter status,
+                                              @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
+                                                      required = false) Long authenticatedCustomerId) {
         return orderService.listOrders(customerId, status, authenticatedCustomerId);
     }
 
+    @Operation(summary = "Sənəd önizləməsini generasiya et")
     @PostMapping("/{orderId}/preview")
     public PreviewResponse preview(@PathVariable Long orderId,
                                    @RequestAttribute(name = AuthAttributes.CUSTOMER_ID,
@@ -94,6 +104,7 @@ public class OrderController {
         return documentService.generatePreview(orderId, authenticatedCustomerId);
     }
 
+    @Operation(summary = "Sifarişi ödə")
     @PostMapping("/{orderId}/pay")
     public PaymentResponse pay(@PathVariable Long orderId,
                                @Valid @RequestBody PayRequest request,
