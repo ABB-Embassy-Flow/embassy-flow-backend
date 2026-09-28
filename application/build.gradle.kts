@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":auth"))
     implementation(project(":order"))
     implementation(project(":portal"))
+    implementation(project(":notification"))
 
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.data.jpa)

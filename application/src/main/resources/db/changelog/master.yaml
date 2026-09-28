@@ -17,3 +17,7 @@ databaseChangeLog:
       file: db/changelog/008-payments.yaml
   - include:
       file: db/changelog/009-seed.yaml
+  - include:
+      file: db/changelog/010-notifications.yaml
+  - include:
+      file: db/changelog/011-notifications-seed.yaml

@@ -20,6 +20,7 @@ import az.abb.embassyflow.customer.service.CustomerService.CustomerInfo;
 import az.abb.embassyflow.customer.service.CustomerService.CustomerPortalInfo;
 import az.abb.embassyflow.embassy.dao.entity.PortalUser;
 import az.abb.embassyflow.embassy.dao.repository.PortalUserRepository;
+import az.abb.embassyflow.notification.service.NotificationService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.entity.OrderItem;
 import az.abb.embassyflow.order.dao.repository.DocumentOrderRepository;
@@ -68,6 +69,9 @@ class PortalServiceTest {
 
     @Mock
     private DocumentService documentService;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private PortalService portalService;
@@ -259,6 +263,8 @@ class PortalServiceTest {
         assertEquals(OrderStatus.COMPLETED, order.getStatus());
         assertEquals(TimelineStep.EMBASSY_REVIEWED, order.getTimeline().get(0).getStep());
         verify(orderRepository).saveAndFlush(order);
+        verify(notificationService).create(1L, "Sənəd hazırdır",
+                "Sifarişiniz üzrə sənəd hazırlanıb: AR-2026-000512. Səfirliyə çatdırılıb.");
     }
 
     @Test
@@ -288,6 +294,8 @@ class PortalServiceTest {
         assertEquals("REJECTED", response.status());
         assertEquals(OrderStatus.REJECTED, order.getStatus());
         assertEquals("Tələblərə uyğun deyil", order.getRejectionNote());
+        verify(notificationService).create(1L, "Sifariş rədd edildi",
+                "Sifarişiniz rədd edilib: AR-2026-000512. Yenidən müraciət edə bilərsiniz.");
     }
 
     @Test

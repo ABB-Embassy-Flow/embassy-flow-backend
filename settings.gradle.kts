@@ -8,5 +8,6 @@ include(
     ":embassy",
     ":auth",
     ":order",
-    ":portal"
+    ":portal",
+    ":notification"
 )

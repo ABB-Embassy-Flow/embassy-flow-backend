@@ -5,7 +5,7 @@ set -uo pipefail
 #
 # App-in lokalde işlədiyini və seed data-nın mövcud olduğunu yoxlayır.
 # Bütün müştəri + portal axınını canlı DB üzərində işlədir:
-#   22 endpoint + variantlar.
+#   24 endpoint + variantlar.
 #
 # Demo dəyərlər:
 #   FİN 5D7X9Q2 → customerId 1 (Aydan Əhadova)
@@ -135,6 +135,17 @@ request "GET /payments #22 (tarixçə)" "$PAY_TXN" \
 
 request "GET /payments #22b (status filtri)" "$PAY_TXN" \
     "$BASE_URL/api/v1/payments?customerId=$CUSTOMER_ID&status=SUCCESS" \
+    -H "Authorization: Bearer $CUSTOMER_TOKEN"
+
+request "GET /notifications #23" 'unreadCount' \
+    "$BASE_URL/api/v1/notifications?customerId=$CUSTOMER_ID&page=0&size=10" \
+    -H "Authorization: Bearer $CUSTOMER_TOKEN"
+
+NTF_ID=$(curl -sS --fail-with-body "$BASE_URL/api/v1/notifications?customerId=$CUSTOMER_ID&page=0&size=1" \
+    -H "Authorization: Bearer $CUSTOMER_TOKEN" | jq -r '.notifications[0].notificationId')
+
+request "PATCH /notifications/{id}/read #24" '"read":true' \
+    -X PATCH "$BASE_URL/api/v1/notifications/$NTF_ID/read" \
     -H "Authorization: Bearer $CUSTOMER_TOKEN"
 
 request "GET /docs/{id}/verify #20 (public QR)" 'true' \

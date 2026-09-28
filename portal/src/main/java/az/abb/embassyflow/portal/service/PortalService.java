@@ -8,9 +8,11 @@ import az.abb.embassyflow.customer.service.CustomerService.CustomerInfo;
 import az.abb.embassyflow.customer.service.CustomerService.CustomerPortalInfo;
 import az.abb.embassyflow.embassy.dao.entity.PortalUser;
 import az.abb.embassyflow.embassy.dao.repository.PortalUserRepository;
+import az.abb.embassyflow.notification.service.NotificationService;
 import az.abb.embassyflow.order.dao.entity.DocumentOrder;
 import az.abb.embassyflow.order.dao.entity.OrderItem;
 import az.abb.embassyflow.order.dao.repository.DocumentOrderRepository;
+import az.abb.embassyflow.order.enums.Language;
 import az.abb.embassyflow.order.enums.OrderFilter;
 import az.abb.embassyflow.order.enums.OrderStatus;
 import az.abb.embassyflow.order.enums.TimelineStep;
@@ -48,13 +50,16 @@ public class PortalService {
     private final PortalUserRepository portalUserRepository;
     private final CustomerService customerService;
     private final DocumentService documentService;
+    private final NotificationService notificationService;
 
     public PortalService(DocumentOrderRepository orderRepository, PortalUserRepository portalUserRepository,
-                         CustomerService customerService, DocumentService documentService) {
+                         CustomerService customerService, DocumentService documentService,
+                         NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.portalUserRepository = portalUserRepository;
         this.customerService = customerService;
         this.documentService = documentService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -137,7 +142,33 @@ public class PortalService {
         order.addTimeline(TimelineStep.EMBASSY_REVIEWED);
         orderRepository.saveAndFlush(order);
 
+        if (order.getCustomerId() != null) {
+            notificationService.create(order.getCustomerId(), title(target, order), body(target, order));
+        }
+
         return new PortalStatusUpdateResponse(order.getOrderNumber(), target.name(), order.getUpdatedAt());
+    }
+
+    private static String title(OrderStatus target, DocumentOrder order) {
+        boolean az = order.getLanguage() == Language.AZ;
+        return switch (target) {
+            case COMPLETED -> az ? "Sənəd hazırdır" : "Document is ready";
+            case REJECTED -> az ? "Sifariş rədd edildi" : "Order rejected";
+            default -> "";
+        };
+    }
+
+    private static String body(OrderStatus target, DocumentOrder order) {
+        boolean az = order.getLanguage() == Language.AZ;
+        return switch (target) {
+            case COMPLETED -> az
+                    ? "Sifarişiniz üzrə sənəd hazırlanıb: " + order.getOrderNumber() + ". Səfirliyə çatdırılıb."
+                    : "Your document is ready: " + order.getOrderNumber() + ". Delivered to the embassy.";
+            case REJECTED -> az
+                    ? "Sifarişiniz rədd edilib: " + order.getOrderNumber() + ". Yenidən müraciət edə bilərsiniz."
+                    : "Your order was rejected: " + order.getOrderNumber() + ". You can apply again.";
+            default -> "";
+        };
     }
 
     @Transactional(readOnly = true)
