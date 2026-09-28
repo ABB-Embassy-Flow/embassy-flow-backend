@@ -5,7 +5,7 @@ set -uo pipefail
 #
 # App-in lokalde işlədiyini və seed data-nın mövcud olduğunu yoxlayır.
 # Bütün müştəri + portal axınını canlı DB üzərində işlədir:
-#   21 endpoint + variantlar.
+#   22 endpoint + variantlar.
 #
 # Demo dəyərlər:
 #   FİN 5D7X9Q2 → customerId 1 (Aydan Əhadova)
@@ -109,11 +109,13 @@ VERIFY_CODE=$(json_value "$resp" '.verificationCode')
 echo "$resp" | grep -qi 'verificationCode' && { printf "PASS  %-42s\n" "POST /orders/{id}/preview #13"; pass=$((pass + 1)); } \
     || { printf "FAIL  %-42s\n%s\n" "POST /orders/{id}/preview #13" "$resp"; fail=$((fail + 1)); }
 
-request "POST /orders/{id}/pay #14" 'SUCCESS' \
-    -X POST "$BASE_URL/api/v1/orders/$ORDER_ID/pay" \
+resp=$(curl -sS --fail-with-body -X POST "$BASE_URL/api/v1/orders/$ORDER_ID/pay" \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $CUSTOMER_TOKEN" \
-    -d "{\"cardId\":$CARD_ID,\"cvv\":\"000\"}"
+    -d "{\"cardId\":$CARD_ID,\"cvv\":\"000\"}")
+PAY_TXN=$(json_value "$resp" '.transactionNo')
+echo "$resp" | grep -qi 'SUCCESS' && { printf "PASS  %-42s\n" "POST /orders/{id}/pay #14"; pass=$((pass + 1)); } \
+    || { printf "FAIL  %-42s\n%s\n" "POST /orders/{id}/pay #14" "$resp"; fail=$((fail + 1)); }
 
 request "GET /orders?customerId=1 #12" "AR-2026" \
     "$BASE_URL/api/v1/orders?customerId=$CUSTOMER_ID&status=ALL" \
@@ -125,6 +127,14 @@ request "GET /orders/{id} #4 (status)" 'PAYMENT_RECEIVED' \
 
 request "GET /customers/1/accounts #8" 'accountNumber' \
     "$BASE_URL/api/v1/customers/$CUSTOMER_ID/accounts" \
+    -H "Authorization: Bearer $CUSTOMER_TOKEN"
+
+request "GET /payments #22 (tarixçə)" "$PAY_TXN" \
+    "$BASE_URL/api/v1/payments?customerId=$CUSTOMER_ID&page=0&size=10" \
+    -H "Authorization: Bearer $CUSTOMER_TOKEN"
+
+request "GET /payments #22b (status filtri)" "$PAY_TXN" \
+    "$BASE_URL/api/v1/payments?customerId=$CUSTOMER_ID&status=SUCCESS" \
     -H "Authorization: Bearer $CUSTOMER_TOKEN"
 
 request "GET /docs/{id}/verify #20 (public QR)" 'true' \
