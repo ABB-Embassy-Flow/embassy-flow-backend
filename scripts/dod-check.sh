@@ -178,7 +178,7 @@ request "GET /portal/documents/{id}/download #21" 'AB' \
     -H "Authorization: Bearer $PORTAL_TOKEN"
 
 request "PUT /portal/documents/{id}/status #19" 'COMPLETED' \
-    -X PUT "$BASE_URL/api/v1/portal/documents/$DOC_NO/status" \
+    -X PUT "$BASE_URL/api/v1/portal/documents/AR-2026-000103/status" \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $PORTAL_TOKEN" \
     -d '{"status":"COMPLETED"}'
